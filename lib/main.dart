@@ -110,6 +110,9 @@ class _MyHomePageState extends State<MyHomePage> {
                                   print("BluetoothDeviceState.disconnected");
                                 } else if (BluetoothDeviceState.connected == event) {
                                   print("BluetoothDeviceState.connected");
+                                  setState(() {
+
+                                  });
                                 }
                               });
                               await bluetoothDevice?.connect(autoConnect: false);
