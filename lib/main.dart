@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
+import 'package:flutter_pulse_oximeter_connect/service/pulse_oximeter/j1/j1_ble_gatt_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 void main() {
@@ -34,6 +35,11 @@ class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
   void _incrementCounter() {}
+
+  BluetoothCharacteristic? requestBluetoothCharacteristic0;
+  BluetoothCharacteristic? requestBluetoothCharacteristic1;
+  BluetoothCharacteristic? dataBluetoothCharacteristic0;
+  BluetoothCharacteristic? dataBluetoothCharacteristic1;
 
   checkSystemPermission() async {
     var status = await Permission.location.status;
@@ -111,7 +117,6 @@ class _MyHomePageState extends State<MyHomePage> {
                                 } else if (BluetoothDeviceState.connected == event) {
                                   print("BluetoothDeviceState.connected");
                                   setState(() {
-
                                   });
                                 }
                               });
@@ -127,6 +132,9 @@ class _MyHomePageState extends State<MyHomePage> {
                                 print("service: ${element.uuid.toString()}");
                                 element.characteristics.forEach((element2) {
                                   print("characteristics: ${element2.uuid.toString()}");
+                                  if(element2.uuid.toString() == J1BleGattService.UUID_CHAR_DATA_00){
+
+                                  }
                                 });
                               });
                             },
@@ -136,6 +144,13 @@ class _MyHomePageState extends State<MyHomePage> {
                         setState(() {});
                       },
                       child: Text("refresh")),
+                  ElevatedButton(
+                      onPressed: () async {
+                        await bluetoothDevice?.disconnect();
+                      },
+                      child: Text("DISCONNECT")),
+                  Divider(),
+
                 ],
               ),
             ),
