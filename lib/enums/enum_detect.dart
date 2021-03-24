@@ -1,0 +1,5 @@
+enum EnumDetect {
+  UNDETECT_UNFIND_FINGER,
+  DETECTING,
+  UNKONWN,
+}
