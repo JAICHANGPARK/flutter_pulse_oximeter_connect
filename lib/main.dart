@@ -1,11 +1,13 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 import 'package:flutter_pulse_oximeter_connect/enums/enum_detect.dart';
 import 'package:flutter_pulse_oximeter_connect/service/pulse_oximeter/j1/j1_ble_gatt_service.dart';
-import 'package:oscilloscope/oscilloscope.dart';
 import 'package:permission_handler/permission_handler.dart';
+
+import 'oscilloscope.dart';
 
 void main() {
   runApp(MyApp());
@@ -82,7 +84,18 @@ class _MyHomePageState extends State<MyHomePage> {
   String hrvText = "";
   String pIndexText = "";
 
-  List<int> traceSine = [];
+  List<double> traceSine = [];
+
+  int convertEcgValue(int paramInt) {
+    print("paramInt : $paramInt");
+    print("(paramInt >> 21) ${paramInt >> 21}");
+    int i = paramInt >> 21 & 0x7;
+    print("convertEcgValue : i : $i");
+    return (i == 0) ? (paramInt & 0x1FFFFF) : ((7 == i) ? (paramInt | 0xFF000000) : ((1 == i) ? 2097152 : ((6 == i) ? 2097152 : 0)));
+  }
+  getAdcData(){
+    List<int> arrayOfInt = List.filled(5, 0);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -91,12 +104,13 @@ class _MyHomePageState extends State<MyHomePage> {
       showYAxis: true,
       yAxisColor: Colors.orange,
       margin: EdgeInsets.all(20.0),
-      strokeWidth: 1.0,
+      strokeWidth: 2.0,
       backgroundColor: Colors.black,
-      traceColor: Colors.green,
-      yAxisMax: 0,
-      yAxisMin: 500000,
+      traceColor: Colors.red,
+      yAxisMax: 500000,
+      yAxisMin: 30000,
       dataSet: traceSine,
+
     );
 
     return Scaffold(
@@ -125,7 +139,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   }),
             ),
             Expanded(
-              flex: 4,
+              flex: 5,
               child: Column(
                 children: [
 
@@ -152,6 +166,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             await bluetoothDevice?.disconnect();
                             await dataStateStreamSubscription0?.cancel();
                             await dataStateStreamSubscription1?.cancel();
+                            traceSine.clear();
                           },
                           child: Text("DISCONNECT")),
                       ElevatedButton(
@@ -223,16 +238,22 @@ class _MyHomePageState extends State<MyHomePage> {
                               print("dataBluetoothCharacteristic1");
                               print(event);
                               if(event.length> 0){
-                                for(int i = 0; i < 5; i++){
-                                  int j = i * 3;
-                                  String s = "";
-                                  s += event[j+3].toRadixString(16);
-                                  s += event[j+4].toRadixString(16);
-                                  s += event[j+5].toRadixString(16);
-                                  // print(s);
-                                  int adc = int.parse(s, radix: 16);
-                                  print(adc);
-                                  traceSine.add(adc);
+                                if(event[1] == 2 && event[2] == 4){
+                                  for(int i = 0; i < 5; i++){
+                                    int j = i * 3;
+                                    String s = "";
+                                    s += event[j+3].toRadixString(16);
+                                    print("s0: $s");
+                                    s += event[j+4].toRadixString(16);
+                                    print("s1: $s");
+                                    s += event[j+5].toRadixString(16);
+                                    print("s2: $s");
+                                    int adc = int.parse(s, radix: 16);
+                                    print("adc: $adc");
+                                    // int filteredAdc = convertEcgValue(adc);
+                                    // print("filteredAdc.toDouble() : ${filteredAdc.toDouble()}");
+                                    traceSine.add(adc.toDouble());
+                                  }
                                 }
                               }
                             });
@@ -360,16 +381,20 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
 
                   Divider(color: Colors.grey,),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      Text("Spo2 : $spo2Text %", style: TextStyle(
-                        fontSize: 24
-                      ),),
-                      Text("Heart : $heartText Beats/min", style: TextStyle(
+                  Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+
+                      children: [
+                        Text("Spo2 : $spo2Text %", style: TextStyle(
                           fontSize: 24
-                      ),),
-                    ],
+                        ),),
+                        Text("Heart : $heartText Beats/min", style: TextStyle(
+                            fontSize: 24
+                        ),),
+                      ],
+                    ),
                   ),
                   SizedBox(height: 24,),
                   Row(
@@ -383,11 +408,22 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),),
                     ],
                   ),
-                  Expanded(flex: 1, child: scopeOne),
-
                 ],
               ),
             ),
+            Expanded(flex: 3, child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  Expanded(child: scopeOne),
+                  ElevatedButton(
+                      onPressed: () async {
+                        traceSine.clear();
+                      },
+                      child: Text("clear graph")),
+                ],
+              ),
+            )),
           ],
         ),
       ),
