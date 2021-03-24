@@ -41,6 +41,12 @@ class _MyHomePageState extends State<MyHomePage> {
   BluetoothCharacteristic? dataBluetoothCharacteristic0;
   BluetoothCharacteristic? dataBluetoothCharacteristic1;
 
+  BluetoothDevice? bluetoothDevice;
+  StreamSubscription? deviceStateStreamSubscription;
+
+  StreamSubscription? dataStateStreamSubscription0;
+  StreamSubscription? dataStateStreamSubscription1;
+
   checkSystemPermission() async {
     var status = await Permission.location.status;
     if (status.isDenied) {
@@ -61,13 +67,12 @@ class _MyHomePageState extends State<MyHomePage> {
     checkSystemPermission();
   }
 
-  BluetoothDevice? bluetoothDevice;
-  StreamSubscription? deviceStateStreamSubscription;
-
   @override
   void dispose() {
     // TODO: implement dispose
     deviceStateStreamSubscription?.cancel();
+    dataStateStreamSubscription0?.cancel();
+    dataStateStreamSubscription1?.cancel();
     super.dispose();
   }
 
@@ -116,8 +121,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                   print("BluetoothDeviceState.disconnected");
                                 } else if (BluetoothDeviceState.connected == event) {
                                   print("BluetoothDeviceState.connected");
-                                  setState(() {
-                                  });
+                                  setState(() {});
                                 }
                               });
                               await bluetoothDevice?.connect(autoConnect: false);
@@ -132,8 +136,12 @@ class _MyHomePageState extends State<MyHomePage> {
                                 print("service: ${element.uuid.toString()}");
                                 element.characteristics.forEach((element2) {
                                   print("characteristics: ${element2.uuid.toString()}");
-                                  if(element2.uuid.toString() == J1BleGattService.UUID_CHAR_DATA_00){
-
+                                  if (element2.uuid.toString() == J1BleGattService.UUID_CHAR_REQ_00) {
+                                    requestBluetoothCharacteristic0 = element2;
+                                  } else if (element2.uuid.toString() == J1BleGattService.UUID_CHAR_DATA_00) {
+                                    dataBluetoothCharacteristic0 = element2;
+                                  } else if (element2.uuid.toString() == J1BleGattService.UUID_CHAR_DATA_01) {
+                                    dataBluetoothCharacteristic1 = element2;
                                   }
                                 });
                               });
@@ -150,7 +158,105 @@ class _MyHomePageState extends State<MyHomePage> {
                       },
                       child: Text("DISCONNECT")),
                   Divider(),
+                  ElevatedButton(
+                      onPressed: () async {
+                        await dataBluetoothCharacteristic0?.setNotifyValue(true);
+                        await dataBluetoothCharacteristic1?.setNotifyValue(true);
+                      },
+                      child: Text("Set Listen")),
+                  ElevatedButton(
+                      onPressed: () async {
+                        dataStateStreamSubscription0?.cancel();
+                        dataStateStreamSubscription1?.cancel();
 
+                        dataStateStreamSubscription0 = dataBluetoothCharacteristic0?.value.listen((event) {
+                          print("dataBluetoothCharacteristic0");
+                          print(event);
+                        });
+                        dataStateStreamSubscription1 = dataBluetoothCharacteristic1?.value.listen((event) {
+                          print("dataBluetoothCharacteristic1");
+                          print(event);
+                        });
+                      },
+                      child: Text("Set Subscribe")),
+                  ElevatedButton(
+                      onPressed: () async {
+                        await requestBluetoothCharacteristic0?.write([
+                          0x90,
+                          0x01,
+                          0x02,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00
+                        ]);
+                      },
+                      child: Text("Send Command 1")),
+                  ElevatedButton(
+                      onPressed: () async {
+                        await requestBluetoothCharacteristic0?.write([
+                          0x90,
+                          0x01,
+                          0x01,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00
+                        ]);
+                      },
+                      child: Text("Send Command 2")),
+                  ElevatedButton(
+                      onPressed: () async {
+                        await requestBluetoothCharacteristic0?.write([
+                          0x90,
+                          0x02,
+                          0x01,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00
+                        ]);
+                      },
+                      child: Text("Send Command 3")),
                 ],
               ),
             ),
