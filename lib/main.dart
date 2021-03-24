@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
+import 'package:flutter_pulse_oximeter_connect/enums/enum_detect.dart';
 import 'package:flutter_pulse_oximeter_connect/service/pulse_oximeter/j1/j1_ble_gatt_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -155,6 +156,8 @@ class _MyHomePageState extends State<MyHomePage> {
                   ElevatedButton(
                       onPressed: () async {
                         await bluetoothDevice?.disconnect();
+                        await dataStateStreamSubscription0?.cancel();
+                        await dataStateStreamSubscription1?.cancel();
                       },
                       child: Text("DISCONNECT")),
                   Divider(),
@@ -172,6 +175,17 @@ class _MyHomePageState extends State<MyHomePage> {
                         dataStateStreamSubscription0 = dataBluetoothCharacteristic0?.value.listen((event) {
                           print("dataBluetoothCharacteristic0");
                           print(event);
+                          if(event.length > 0){
+                            if(event[3] == EnumDetect.DETECTING.index){
+                              print(">>> Detacted");
+                              print("SPO2: ${event[4]}");
+                              print("Heart Rate: ${event[5]}");
+                              print("HRV: ${event[6]}");
+                              print("perfusionIndex: ${event[7] / 10.0}");
+                            }
+                          }
+
+
                         });
                         dataStateStreamSubscription1 = dataBluetoothCharacteristic1?.value.listen((event) {
                           print("dataBluetoothCharacteristic1");
@@ -179,11 +193,97 @@ class _MyHomePageState extends State<MyHomePage> {
                         });
                       },
                       child: Text("Set Subscribe")),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton(
+                          onPressed: () async {
+                            await requestBluetoothCharacteristic0?.write([
+                              0x90,
+                              0x01,
+                              0x02,
+                              0x00,
+                              0x00,
+                              0x00,
+                              0x00,
+                              0x00,
+                              0x00,
+                              0x00,
+                              0x00,
+                              0x00,
+                              0x00,
+                              0x00,
+                              0x00,
+                              0x00,
+                              0x00,
+                              0x00,
+                              0x00,
+                              0x00
+                            ]);
+                          },
+                          child: Text("Send Command 1")),
+                      ElevatedButton(
+                          onPressed: () async {
+                            await requestBluetoothCharacteristic0?.write([
+                              0x90,
+                              0x01,
+                              0x01,
+                              0x00,
+                              0x00,
+                              0x00,
+                              0x00,
+                              0x00,
+                              0x00,
+                              0x00,
+                              0x00,
+                              0x00,
+                              0x00,
+                              0x00,
+                              0x00,
+                              0x00,
+                              0x00,
+                              0x00,
+                              0x00,
+                              0x00
+                            ]);
+                          },
+                          child: Text("Send Command 2")),
+
+
+                    ],
+                  ),
+
                   ElevatedButton(
                       onPressed: () async {
                         await requestBluetoothCharacteristic0?.write([
                           0x90,
+                          0x02,
                           0x01,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00
+                        ]);
+                      },
+                      child: Text("Start Read")),
+                  ElevatedButton(
+                      onPressed: () async {
+                        await requestBluetoothCharacteristic0?.write([
+                          0x90,
+                          0x02,
                           0x02,
                           0x00,
                           0x00,
@@ -204,59 +304,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           0x00
                         ]);
                       },
-                      child: Text("Send Command 1")),
-                  ElevatedButton(
-                      onPressed: () async {
-                        await requestBluetoothCharacteristic0?.write([
-                          0x90,
-                          0x01,
-                          0x01,
-                          0x00,
-                          0x00,
-                          0x00,
-                          0x00,
-                          0x00,
-                          0x00,
-                          0x00,
-                          0x00,
-                          0x00,
-                          0x00,
-                          0x00,
-                          0x00,
-                          0x00,
-                          0x00,
-                          0x00,
-                          0x00,
-                          0x00
-                        ]);
-                      },
-                      child: Text("Send Command 2")),
-                  ElevatedButton(
-                      onPressed: () async {
-                        await requestBluetoothCharacteristic0?.write([
-                          0x90,
-                          0x02,
-                          0x01,
-                          0x00,
-                          0x00,
-                          0x00,
-                          0x00,
-                          0x00,
-                          0x00,
-                          0x00,
-                          0x00,
-                          0x00,
-                          0x00,
-                          0x00,
-                          0x00,
-                          0x00,
-                          0x00,
-                          0x00,
-                          0x00,
-                          0x00
-                        ]);
-                      },
-                      child: Text("Send Command 3")),
+                      child: Text("Stop Read")),
                 ],
               ),
             ),
