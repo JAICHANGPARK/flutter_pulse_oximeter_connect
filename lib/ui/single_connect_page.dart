@@ -8,6 +8,7 @@ import 'package:flutter_pulse_oximeter_connect/enums/enum_detect.dart';
 import 'package:flutter_pulse_oximeter_connect/service/pulse_oximeter/j1/j1_ble_gatt_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import 'multi_connect_page.dart';
 import 'oscilloscope.dart';
 
 class SingleConnectPage extends StatefulWidget {
@@ -414,8 +415,8 @@ class _SingleConnectState extends State<SingleConnectPage> {
 
               onPressed: ()async {
                 await bluetoothDevice?.disconnect();
-
-
+                await cancelAllSubscriptions();
+              Navigator.of(context).push(MaterialPageRoute(builder: (context)=>MultiConnectPage()));
               },
               child: Text("Multi-Connection Page"),))
           ],
@@ -438,5 +439,10 @@ class _SingleConnectState extends State<SingleConnectPage> {
         },
       ),
     );
+  }
+  Future<void> cancelAllSubscriptions()async{
+    await deviceStateStreamSubscription?.cancel();
+    await dataStateStreamSubscription0?.cancel();
+    await dataStateStreamSubscription1?.cancel();
   }
 }
