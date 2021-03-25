@@ -117,7 +117,8 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text(widget.title!),
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
@@ -414,8 +415,10 @@ class _MyHomePageState extends State<MyHomePage> {
             Expanded(flex: 3, child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Expanded(child: scopeOne),
+                  SizedBox(width: 24,),
                   ElevatedButton(
                       onPressed: () async {
                         traceSine.clear();
@@ -424,6 +427,14 @@ class _MyHomePageState extends State<MyHomePage> {
                 ],
               ),
             )),
+            Expanded(child: ElevatedButton(
+
+              onPressed: ()async {
+                await bluetoothDevice?.disconnect();
+
+
+              },
+            child: Text("Multi-Connection Page"),))
           ],
         ),
       ),
