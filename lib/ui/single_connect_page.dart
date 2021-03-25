@@ -123,11 +123,12 @@ class _SingleConnectState extends State<SingleConnectPage> {
                     return ListTile();
                   }),
             ),
+            ElevatedButton(onPressed: (){}, child: Text("Start Scan")),
+            ElevatedButton(onPressed: (){}, child: Text("Stop Scan")),
             Expanded(
               flex: 5,
               child: Column(
                 children: [
-
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
