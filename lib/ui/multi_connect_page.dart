@@ -10,7 +10,6 @@ class J1Device {
   BluetoothCharacteristic? requestBluetoothCharacteristic1;
   BluetoothCharacteristic? dataBluetoothCharacteristic0;
   BluetoothCharacteristic? dataBluetoothCharacteristic1;
-  StreamSubscription? deviceStateStreamSubscription;
 
   J1Device(
       {this.bluetoothDevice,
@@ -30,6 +29,8 @@ class MultiConnectPage extends StatefulWidget {
 class _MultiConnectPageState extends State<MultiConnectPage> {
   StreamSubscription? scanStreamSubscription;
   Map<String, J1Device> bluetoothDevices = Map();
+  List<StreamSubscription> deviceStateStreamSubscriptions = [];
+  List<Widget> deviceItems = [];
 
   @override
   void initState() {
@@ -94,10 +95,44 @@ class _MultiConnectPageState extends State<MultiConnectPage> {
                   // print(">>> bluetoothDevices.length : ${bluetoothDevices.length}");
                   bluetoothDevices.forEach((key, value) async {
                     print(key);
+                    deviceStateStreamSubscriptions.add(value.bluetoothDevice!.state.listen((event) {
+                      print(">>>deviceStateStreamSubscriptions key: $key");
+                      if (event == BluetoothDeviceState.disconnected) {
+                        print(">>> $key : disconnected");
+                      } else if (event == BluetoothDeviceState.connected) {
+                        print(">>> $key : connected");
+                      }
+                    }));
+
                     await value.bluetoothDevice?.connect(autoConnect: false, timeout: Duration(seconds: 10));
+                    deviceItems.add(ListTile(
+                      title: Text("${value.bluetoothDevice?.name}"),
+                      subtitle: Text("${value.bluetoothDevice?.id}"),
+                    ));
+                    setState(() {});
                   });
+                  setState(() {});
                 },
                 child: Text("Connect Devices")),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                "연결된 장치",
+                style: TextStyle(fontSize: 18),
+              ),
+            ),
+            Container(
+              height: 240,
+              child: deviceItems.length > 0 ? ListView.builder(
+                itemBuilder: (context, index) {
+                  return deviceItems[index];
+                },
+                itemCount: deviceItems.length,
+              ) : Text("연결된 장치 없음"),
+            ),
+            Divider(
+              color: Colors.grey,
+            ),
             ElevatedButton(
                 onPressed: () async {
                   // print(">>> bluetoothDevices.length : ${bluetoothDevices.length}");
@@ -135,11 +170,50 @@ class _MultiConnectPageState extends State<MultiConnectPage> {
                   // print(">>> bluetoothDevices.length : ${bluetoothDevices.length}");
                   bluetoothDevices.forEach((key, value) async {
                     print(key);
+                  });
+                },
+                child: Text("Set Listen ")),
+            Divider(
+              color: Colors.grey,
+            ),
+            Row(
+              children: [
+                ElevatedButton(
+                    onPressed: () async {
+                      // print(">>> bluetoothDevices.length : ${bluetoothDevices.length}");
+                      bluetoothDevices.forEach((key, value) async {
+                        print(key);
+                      });
+                    },
+                    child: Text("Start Data Receive")),
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                "데이터 펍",
+                style: TextStyle(fontSize: 18),
+              ),
+            ),
+            Divider(
+              color: Colors.grey,
+            ),
+            ElevatedButton(
+                onPressed: () async {
+                  // print(">>> bluetoothDevices.length : ${bluetoothDevices.length}");
+                  bluetoothDevices.forEach((key, value) async {
+                    print(key);
                     await value.bluetoothDevice?.disconnect();
+                  });
+
+                  deviceStateStreamSubscriptions.forEach((element) {
+                    element.cancel();
+                  });
+                  setState(() {
+                    deviceItems.clear();
                   });
                 },
                 child: Text(" Disconnect Devices")),
-
           ],
         ),
       ),
