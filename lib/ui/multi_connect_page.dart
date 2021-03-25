@@ -20,13 +20,14 @@ class J1Device {
       this.dataBluetoothCharacteristic1});
 }
 
-class OximeterData{
+class OximeterData {
   int hr;
   int spo2;
   int hrv;
   double pi;
   int timestamp;
-  OximeterData( this.spo2, this.hr, this.hrv, this.pi, this.timestamp);
+
+  OximeterData(this.spo2, this.hr, this.hrv, this.pi, this.timestamp);
 }
 
 class MultiConnectPage extends StatefulWidget {
@@ -44,7 +45,8 @@ class _MultiConnectPageState extends State<MultiConnectPage> {
   List<Widget> deviceItems = [];
   List<OximeterData> oximeterDatas = [];
   ScrollController _scrollController = new ScrollController();
-    Timer? scrollTimer ;
+  Timer? scrollTimer;
+
   @override
   void initState() {
     // TODO: implement initState
@@ -57,8 +59,6 @@ class _MultiConnectPageState extends State<MultiConnectPage> {
     scanStreamSubscription?.cancel();
     super.dispose();
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -197,7 +197,8 @@ class _MultiConnectPageState extends State<MultiConnectPage> {
                               ">>> $key -> Detacted: SPO2: ${event[4]} | Heart Rate: ${event[5]} | HRV: ${event[6]} | perfusionIndex: ${event[7] / 10.0}");
 
                           setState(() {
-                            oximeterDatas.add(OximeterData(event[4], event[5], event[6], event[7] / 10.0, DateTime.now().millisecondsSinceEpoch));
+                            oximeterDatas
+                                .add(OximeterData(event[4], event[5], event[6], event[7] / 10.0, DateTime.now().millisecondsSinceEpoch));
                           });
                           // setState(() {
                           //   spo2Text = event[4].toString();
@@ -247,13 +248,7 @@ class _MultiConnectPageState extends State<MultiConnectPage> {
 
                       scrollTimer = Timer(
                         Duration(seconds: 1),
-                            () {
-                              _scrollController.animateTo(
-                                0.0,
-                                curve: Curves.easeOut,
-                                duration: const Duration(milliseconds: 300),
-                              );
-                            }
+                        () => _scrollController.jumpTo(_scrollController.position.maxScrollExtent),
                       );
                     },
                     child: Text("Start Data Receive")),
@@ -291,6 +286,18 @@ class _MultiConnectPageState extends State<MultiConnectPage> {
                       scrollTimer?.cancel();
                     },
                     child: Text("Stop Data Receive")),
+                SizedBox(
+                  width: 24,
+                ),
+                ElevatedButton(
+                    onPressed: () async {
+                      // print(">>> bluetoothDevices.length : ${bluetoothDevices.length}");
+
+                      setState(() {
+                        oximeterDatas.clear();
+                      });
+                    },
+                    child: Text("Clear Data")),
               ],
             ),
             Padding(
@@ -300,16 +307,18 @@ class _MultiConnectPageState extends State<MultiConnectPage> {
                 style: TextStyle(fontSize: 18),
               ),
             ),
-            Container(height: 240,
-            child: ListView.builder(
-                controller: _scrollController,
-              reverse: true,
-                itemCount: oximeterDatas.length,
-                itemBuilder: (context, index){
-              return ListTile(
-                title: Text("${oximeterDatas[index].hr}bpm, ${oximeterDatas[index].spo2}%, ${oximeterDatas[index].timestamp}"),
-              );
-            }),),
+            Container(
+              height: 240,
+              child: ListView.builder(
+                  shrinkWrap: true,
+                  controller: _scrollController,
+                  itemCount: oximeterDatas.length,
+                  itemBuilder: (context, index) {
+                    return ListTile(
+                      title: Text("${oximeterDatas[index].hr}bpm, ${oximeterDatas[index].spo2}%, ${oximeterDatas[index].timestamp}"),
+                    );
+                  }),
+            ),
             Divider(
               color: Colors.grey,
             ),
@@ -327,7 +336,7 @@ class _MultiConnectPageState extends State<MultiConnectPage> {
                   dataStateStreamSubscriptions.forEach((element) {
                     element.cancel();
                   });
-                  
+
                   scrollTimer?.cancel();
 
                   setState(() {
