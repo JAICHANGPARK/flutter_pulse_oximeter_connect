@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_blue/flutter_blue.dart';
+import 'package:flutter_pulse_oximeter_connect/enums/enum_detect.dart';
 import 'package:flutter_pulse_oximeter_connect/service/pulse_oximeter/j1/j1_ble_gatt_service.dart';
 
 class J1Device {
@@ -19,6 +20,15 @@ class J1Device {
       this.dataBluetoothCharacteristic1});
 }
 
+class OximeterData{
+  int hr;
+  int spo2;
+  int hrv;
+  double pi;
+  int timestamp;
+  OximeterData(this.hr, this.spo2, this.hrv, this.pi, this.timestamp);
+}
+
 class MultiConnectPage extends StatefulWidget {
   MultiConnectPage({Key? key}) : super(key: key);
 
@@ -30,7 +40,9 @@ class _MultiConnectPageState extends State<MultiConnectPage> {
   StreamSubscription? scanStreamSubscription;
   Map<String, J1Device> bluetoothDevices = Map();
   List<StreamSubscription> deviceStateStreamSubscriptions = [];
+  List<StreamSubscription> dataStateStreamSubscriptions = [];
   List<Widget> deviceItems = [];
+  List<OximeterData> oximeterDatas = [];
 
   @override
   void initState() {
@@ -123,12 +135,14 @@ class _MultiConnectPageState extends State<MultiConnectPage> {
             ),
             Container(
               height: 240,
-              child: deviceItems.length > 0 ? ListView.builder(
-                itemBuilder: (context, index) {
-                  return deviceItems[index];
-                },
-                itemCount: deviceItems.length,
-              ) : Text("연결된 장치 없음"),
+              child: deviceItems.length > 0
+                  ? ListView.builder(
+                      itemBuilder: (context, index) {
+                        return deviceItems[index];
+                      },
+                      itemCount: deviceItems.length,
+                    )
+                  : Text("연결된 장치 없음"),
             ),
             Divider(
               color: Colors.grey,
@@ -170,6 +184,24 @@ class _MultiConnectPageState extends State<MultiConnectPage> {
                   // print(">>> bluetoothDevices.length : ${bluetoothDevices.length}");
                   bluetoothDevices.forEach((key, value) async {
                     print(key);
+
+                    dataStateStreamSubscriptions.add(value.dataBluetoothCharacteristic0!.value.listen((event) {
+                      print("dataBluetoothCharacteristic0");
+                      print(event);
+                      if (event.length > 0) {
+                        if (event[3] == EnumDetect.DETECTING.index) {
+                          print(
+                              ">>> $key -> Detacted: SPO2: ${event[4]} | Heart Rate: ${event[5]} | HRV: ${event[6]} | perfusionIndex: ${event[7] / 10.0}");
+                          oximeterDatas.add(OximeterData(event[4], event[5], event[6], event[7] / 10.0, DateTime.now().millisecondsSinceEpoch));
+                          // setState(() {
+                          //   spo2Text = event[4].toString();
+                          //   heartText = event[5].toString();
+                          //   hrvText = event[6].toString();
+                          //   pIndexText = (event[7] / 10.0).toString();
+                          // });
+                        }
+                      }
+                    }));
                   });
                 },
                 child: Text("Set Listen ")),
@@ -183,9 +215,64 @@ class _MultiConnectPageState extends State<MultiConnectPage> {
                       // print(">>> bluetoothDevices.length : ${bluetoothDevices.length}");
                       bluetoothDevices.forEach((key, value) async {
                         print(key);
+                        await value.requestBluetoothCharacteristic0?.write([
+                          0x90,
+                          0x02,
+                          0x01,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00
+                        ]);
                       });
                     },
                     child: Text("Start Data Receive")),
+                SizedBox(
+                  width: 24,
+                ),
+                ElevatedButton(
+                    onPressed: () async {
+                      // print(">>> bluetoothDevices.length : ${bluetoothDevices.length}");
+                      bluetoothDevices.forEach((key, value) async {
+                        print(key);
+                        await value.requestBluetoothCharacteristic0?.write([
+                          0x90,
+                          0x02,
+                          0x02,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x00
+                        ]);
+                      });
+                    },
+                    child: Text("Stop Data Receive")),
               ],
             ),
             Padding(
@@ -195,6 +282,14 @@ class _MultiConnectPageState extends State<MultiConnectPage> {
                 style: TextStyle(fontSize: 18),
               ),
             ),
+            Container(height: 240,
+            child: ListView.builder(
+                itemCount: oximeterDatas.length,
+                itemBuilder: (context, index){
+              return ListTile(
+                title: Text(oximeterDatas[index].hr.toString()),
+              );
+            }),),
             Divider(
               color: Colors.grey,
             ),
@@ -209,8 +304,13 @@ class _MultiConnectPageState extends State<MultiConnectPage> {
                   deviceStateStreamSubscriptions.forEach((element) {
                     element.cancel();
                   });
+                  dataStateStreamSubscriptions.forEach((element) {
+                    element.cancel();
+                  });
+
                   setState(() {
                     deviceItems.clear();
+                    oximeterDatas.clear();
                   });
                 },
                 child: Text(" Disconnect Devices")),
