@@ -234,11 +234,8 @@ class _SingleConnectState extends State<SingleConnectPage> {
                                     hrvText = event[6].toString();
                                     pIndexText = (event[7] / 10.0).toString();
                                   });
-
                                 }
                               }
-
-
                             });
                             dataStateStreamSubscription1 = dataBluetoothCharacteristic1?.value.listen((event) {
                               print("dataBluetoothCharacteristic1");
