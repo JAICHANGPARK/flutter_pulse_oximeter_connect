@@ -12,6 +12,7 @@ class MultiConnectPage extends StatefulWidget {
 
 class _MultiConnectPageState extends State<MultiConnectPage> {
   StreamSubscription? scanStreamSubscription;
+  Map<String, BluetoothDevice> bluetoothDevices = Map();
   @override
   void initState() {
     // TODO: implement initState
@@ -36,20 +37,29 @@ class _MultiConnectPageState extends State<MultiConnectPage> {
             Row(
               children: [
                 ElevatedButton(onPressed: ()async{
+                  bluetoothDevices.clear();
                   scanStreamSubscription = FlutterBlue.instance.scan(
-                    timeout: Duration(seconds: 10)
+                    timeout: Duration(seconds: 10),
                   ).listen((event) {
                       print("${event.device.name} / ${event.device.id}");
+                      if(event.device.name == "J1"){
+                        print(">>> J1 Detected ");
+                        bluetoothDevices["${event.device.id}"] = event.device;
+                      }
                   });
-
                 }, child: Text("Start Scan")),
                 SizedBox(width: 24,),
                 ElevatedButton(onPressed: ()async{
+                  await scanStreamSubscription?.cancel();
                   await FlutterBlue.instance.stopScan();
 
                 }, child: Text("Stop Scan")),
               ],
             ),
+            ElevatedButton(onPressed: ()async{
+              print(">>> bluetoothDevices.length : ${bluetoothDevices.length}");
+
+            }, child: Text("Check Devices")),
           ],
         ),
       ),
