@@ -7,7 +7,7 @@ import 'package:flutter_pulse_oximeter_connect/enums/enum_detect.dart';
 import 'package:flutter_pulse_oximeter_connect/service/pulse_oximeter/j1/j1_ble_gatt_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import 'oscilloscope.dart';
+import 'ui/oscilloscope.dart';
 
 void main() {
   runApp(MyApp());
