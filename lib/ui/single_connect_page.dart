@@ -34,6 +34,8 @@ class _SingleConnectState extends State<SingleConnectPage> {
 
   StreamSubscription? dataStateStreamSubscription0;
   StreamSubscription? dataStateStreamSubscription1;
+  StreamSubscription? scanStreamSubscription;
+
 
   checkSystemPermission() async {
     var status = await Permission.location.status;
@@ -61,6 +63,7 @@ class _SingleConnectState extends State<SingleConnectPage> {
     deviceStateStreamSubscription?.cancel();
     dataStateStreamSubscription0?.cancel();
     dataStateStreamSubscription1?.cancel();
+    scanStreamSubscription?.cancel();
     super.dispose();
   }
   String spo2Text = "";
@@ -114,17 +117,33 @@ class _SingleConnectState extends State<SingleConnectPage> {
                   builder: (c, snapshot) {
                     snapshot.data!.forEach((element) {
                       // print("${element.device.id} / ${element.device.name}");
-                      if (element.device.name == "J1") {
-                        print(">>> Oximeter Founded!!");
-                        bluetoothDevice = element.device;
-                        FlutterBlue.instance.stopScan();
-                      }
+
                     });
                     return ListTile();
                   }),
             ),
-            ElevatedButton(onPressed: (){}, child: Text("Start Scan")),
-            ElevatedButton(onPressed: (){}, child: Text("Stop Scan")),
+            Row(
+              children: [
+                ElevatedButton(onPressed: (){
+                  scanStreamSubscription = FlutterBlue.instance.scan(
+                      timeout: Duration(seconds: 10)
+                  ).listen((event) {
+                    print("${event.device.name} / ${event.device.id}");
+                    if (event.device.name == "J1") {
+                      print(">>> Oximeter Founded!!");
+                      bluetoothDevice = event.device;
+                      FlutterBlue.instance.stopScan();
+                    }
+                  });
+
+                }, child: Text("Start Scan")),
+                ElevatedButton(onPressed: (){
+                  scanStreamSubscription?.cancel();
+                  FlutterBlue.instance.stopScan();
+                }, child: Text("Stop Scan")),
+              ],
+            ),
+
             Expanded(
               flex: 5,
               child: Column(
@@ -197,6 +216,7 @@ class _SingleConnectState extends State<SingleConnectPage> {
                           onPressed: () async {
                             dataStateStreamSubscription0?.cancel();
                             dataStateStreamSubscription1?.cancel();
+
 
                             dataStateStreamSubscription0 = dataBluetoothCharacteristic0?.value.listen((event) {
                               print("dataBluetoothCharacteristic0");
@@ -445,5 +465,6 @@ class _SingleConnectState extends State<SingleConnectPage> {
     await deviceStateStreamSubscription?.cancel();
     await dataStateStreamSubscription0?.cancel();
     await dataStateStreamSubscription1?.cancel();
+    await scanStreamSubscription?.cancel();
   }
 }
