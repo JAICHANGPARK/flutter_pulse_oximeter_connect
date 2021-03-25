@@ -1,6 +1,23 @@
 # flutter_pulse_oximeter_connect
 
-A new Flutter application.
+<div style="text-align: center">
+  <table>
+    <tr>
+<td style="text-align: center">
+    <img src="https://github.com/JAICHANGPARK/flutter_pulse_oximeter_connect/blob/main/img/device-2021-03-25-100745.png" width="200"/>
+</td>
+<td style="text-align: center">
+    <img src="https://github.com/JAICHANGPARK/flutter_pulse_oximeter_connect/blob/main/img/device-2021-03-25-100838.png" width="200"/>
+</td>
+      
+<td style="text-align: center">
+   <img src="https://github.com/JAICHANGPARK/flutter_pulse_oximeter_connect/blob/main/img/device-2021-03-25-133745.png" width="200"/>
+</td>
+     
+</tr>
+</table>
+</div>
+
 
 ## Getting Started
 
